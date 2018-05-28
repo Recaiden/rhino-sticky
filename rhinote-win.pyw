@@ -34,15 +34,19 @@ from os.path import expanduser
 def defaultFileName(id_note):
     return "rhinote-%d.txt" %id_note
 
+count_note = 0
+
 # the root window:
-def Rhinote():
+def Rhinote(id_note=1):
     def on_closing():
         t.save_file()
         r.destroy()
         
     r = Tk()
     r.option_add('*font', '{Helvetica} 11')
-    t = TextWidget(r, id_note = 1, bg = '#f9f3a9', wrap = 'word', undo = True)
+    t = TextWidget(r, id_note = id_note, bg = '#f9f3a9', wrap = 'word', undo = True)
+    global count_note
+    count_note += 1
     t.focus_set()
     t.pack(fill = 'both', expand = 1)
     r.geometry('220x235')
@@ -94,7 +98,7 @@ class TextWidget(Text):
             self.master.title('Rhinote %s)' % self.filename)
 
     def new_window(self, event):
-        Rhinote()
+        Rhinote(count_note+1)
 
     def help(self, whatever = None):
         tkMessageBox.showinfo('Rhinote Help', message = '''
