@@ -49,9 +49,22 @@ def Rhinote(id_note=1):
     count_note += 1
     t.focus_set()
     t.pack(fill = 'both', expand = 1)
+
+    path_home = expanduser("~")
+    path = os.path.join(path_home, ".rhinote")
+    if not os.path.exists(path):
+        os.mkdir(path)
+    os.chdir(path)
+    
+        
     r.geometry('220x235')
     r.title('Rhinote')
     r.protocol("WM_DELETE_WINDOW", on_closing)
+
+    if os.path.exists(os.path.join(path, defaultFileName(id_note+1))):
+        Rhinote(id_note+1)
+
+    
     r.mainloop()
 
 # the text widget, and all of its functions:
@@ -157,4 +170,6 @@ http://rhinote.tuxfamily.org
 # make it so:
 if __name__ == '__main__':
     Rhinote()
+    
+
 
