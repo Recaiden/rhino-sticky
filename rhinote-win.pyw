@@ -36,11 +36,24 @@ def defaultFileName(id_note):
 
 count_note = 0
 
+def is_int(str_num):
+    try:
+        int(str_num)
+    except ValueError:
+        return False
+    return True
+
 # the root window:
 def Rhinote(id_note=1):
     def on_closing():
         t.save_file()
         r.destroy()
+
+    def configure(event):
+        #canvas.delete("all")
+        w, h = event.width, event.height
+        #print w, h
+        t.set_size(w, h)
         
     r = Tk()
     r.option_add('*font', '{Helvetica} 11')
@@ -55,11 +68,14 @@ def Rhinote(id_note=1):
     if not os.path.exists(path):
         os.mkdir(path)
     os.chdir(path)
-    
+
+    geostring = "%dx%d" %(t.size[0], t.size[1])
         
-    r.geometry('220x235')
+    #r.geometry('220x235')
+    r.geometry(geostring)
     r.title('Rhinote')
     r.protocol("WM_DELETE_WINDOW", on_closing)
+    r.bind("<Configure>", configure)
 
     if os.path.exists(os.path.join(path, defaultFileName(id_note+1))):
         Rhinote(id_note+1)
@@ -77,6 +93,7 @@ class TextWidget(Text):
             #            self.master.title('Rhinote %s' % self.filename)
             #        else:
         f = open(self.filename, 'w')
+        f.write("%d %d\n" %(self.size[0], self.size[1]))
         f.write(self.get('1.0', 'end').rstrip("\r\n"))
         f.close()
         self.master.title('Rhinote %s' % self.filename)
@@ -85,9 +102,13 @@ class TextWidget(Text):
         if self.verbose:
             tkMessageBox.showinfo('FYI', 'File Saved.')
 
+    def set_size(self, w, h):
+        self.size = (w, h)
+
     def save_file_as(self, whatever = None):
         self.filename = tkFileDialog.asksaveasfilename(filetypes = self._filetypes)
         f = open(self.filename, 'w')
+        f.write("%d %d\n" %(self.size[0], self.size[1]))
         f.write(self.get('1.0', 'end'))
         f.close()
         # comment out the following line if you don't want a
@@ -104,7 +125,17 @@ class TextWidget(Text):
             self.master.title('Rhinote %s' % self.filename)
         if not (self.filename == ''):
             f = open(self.filename, 'r')
+
+            # line 1 is hopefully a size parameter
+            line_size = f.readline()
+            args_size = line_size.rstrip("\r\n").split(" ")
+            if len(args_size) is 2 and is_int(args_size[0]) and is_int(args_size[1]):
+                self.set_size(int(args_size[0]), int(args_size[1]))
+            else:
+                f.seek(0)
+                
             f2 = f.read()
+            
             self.delete('1.0', 'end')
             self.insert('1.0', f2)
             f.close()
@@ -145,8 +176,8 @@ http://rhinote.tuxfamily.org
         self.bind('<Control-O>', self.open_file)
         self.bind('<Control-s>', self.save_file)
         self.bind('<Control-S>', self.save_file)
-        self.bind('<Control-a>', self.save_file_as)
-        self.bind('<Control-A>', self.save_file_as)
+        #self.bind('<Control-a>', self.save_file_as)
+        #self.bind('<Control-A>', self.save_file_as)
         self.bind('<Control-h>', self.help)
         self.bind('<Control-H>', self.help)
         self.master = master
@@ -157,6 +188,7 @@ http://rhinote.tuxfamily.org
         ('Rhinote files', '*.rhi'),
             ('All files', '*'),
             ]
+        self.size = (220, 235)
         path_home = expanduser("~")
         self.path = os.path.join(path_home, ".rhinote")
         if not os.path.exists(self.path):
