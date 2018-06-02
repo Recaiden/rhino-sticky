@@ -30,6 +30,7 @@ import tkFileDialog, tkMessageBox
 import os
 from os import system
 from os.path import expanduser
+import sys
 
 def defaultFileName(id_note):
     return "rhinote-%d.txt" %id_note
@@ -46,13 +47,12 @@ def is_int(str_num):
 # the root window:
 def Rhinote(id_note=1):
     def on_closing():
+        t.set_location( t.master.winfo_rootx(), t.master.winfo_rooty() )
         t.save_file()
         r.destroy()
 
     def configure(event):
-        #canvas.delete("all")
-        w, h = event.width, event.height
-        #print w, h
+        w, h = event.width, event.height        
         t.set_size(w, h)
         
     r = Tk()
@@ -69,7 +69,7 @@ def Rhinote(id_note=1):
         os.mkdir(path)
     os.chdir(path)
 
-    geostring = "%dx%d" %(t.size[0], t.size[1])
+    geostring = "%dx%d+%d+%d" %(t.size[0], t.size[1], t.location[0], t.location[1])
         
     #r.geometry('220x235')
     r.geometry(geostring)
@@ -93,7 +93,7 @@ class TextWidget(Text):
             #            self.master.title('Rhinote %s' % self.filename)
             #        else:
         f = open(self.filename, 'w')
-        f.write("%d %d\n" %(self.size[0], self.size[1]))
+        f.write("%d %d %d %d\n" %(self.size[0], self.size[1], self.location[0], self.location[1]))
         f.write(self.get('1.0', 'end').rstrip("\r\n"))
         f.close()
         self.master.title('Rhinote %s' % self.filename)
@@ -104,6 +104,9 @@ class TextWidget(Text):
 
     def set_size(self, w, h):
         self.size = (w, h)
+
+    def set_location(self, x, y):
+        self.location = (x, y)
 
     def save_file_as(self, whatever = None):
         self.filename = tkFileDialog.asksaveasfilename(filetypes = self._filetypes)
@@ -129,8 +132,10 @@ class TextWidget(Text):
             # line 1 is hopefully a size parameter
             line_size = f.readline()
             args_size = line_size.rstrip("\r\n").split(" ")
-            if len(args_size) is 2 and is_int(args_size[0]) and is_int(args_size[1]):
+            if len(args_size) >= 2 and is_int(args_size[0]) and is_int(args_size[1]):
                 self.set_size(int(args_size[0]), int(args_size[1]))
+                if len(args_size) >= 4 and is_int(args_size[2]) and is_int(args_size[3]):
+                    self.set_location(int(args_size[2]), int(args_size[3]))
             else:
                 f.seek(0)
                 
@@ -189,6 +194,7 @@ http://rhinote.tuxfamily.org
             ('All files', '*'),
             ]
         self.size = (220, 235)
+        self.location = (20, 20)
         path_home = expanduser("~")
         self.path = os.path.join(path_home, ".rhinote")
         if not os.path.exists(self.path):
