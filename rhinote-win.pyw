@@ -35,6 +35,7 @@ import sys
 def defaultFileName(id_note):
     return "rhinote-%d.txt" %id_note
 
+MAX_NOTES = 100
 count_note = 0
 
 def is_int(str_num):
@@ -77,8 +78,15 @@ def Rhinote(id_note=1):
     r.protocol("WM_DELETE_WINDOW", on_closing)
     r.bind("<Configure>", configure)
 
-    if os.path.exists(os.path.join(path, defaultFileName(id_note+1))):
-        Rhinote(id_note+1)
+    target = id_note+1
+    attempts = 0
+    while attempts < MAX_NOTES:
+        if os.path.exists(os.path.join(path, defaultFileName(target))):
+            Rhinote(target)
+            attempts = MAX_NOTES
+        else:
+            target += 1
+        attempts += 1
 
     
     r.mainloop()
@@ -92,15 +100,22 @@ class TextWidget(Text):
             #            self.save_file_as()
             #            self.master.title('Rhinote %s' % self.filename)
             #        else:
-        f = open(self.filename, 'w')
-        f.write("%d %d %d %d\n" %(self.size[0], self.size[1], self.location[0], self.location[1]))
-        f.write(self.get('1.0', 'end').rstrip("\r\n"))
-        f.close()
-        self.master.title('Rhinote %s' % self.filename)
-        # Comment out the following line if you don't want a 
-        # pop-up message every time you save a file:
-        if self.verbose:
-            tkMessageBox.showinfo('FYI', 'File Saved.')
+
+        if len(self.get('1.0', 'end').rstrip("\r\n")):
+            f = open(self.filename, 'w')
+            f.write("%d %d %d %d\n" %(self.size[0], self.size[1], self.location[0], self.location[1]))
+            f.write(self.get('1.0', 'end').rstrip("\r\n"))
+            f.close()
+            self.master.title('Rhinote %s' % self.filename)
+            # Comment out the following line if you don't want a 
+            # pop-up message every time you save a file:
+            if self.verbose:
+                tkMessageBox.showinfo('FYI', 'File Saved.')
+        else:
+            try:
+                os.remove(self.filename)
+            except:
+                pass
 
     def set_size(self, w, h):
         self.size = (w, h)
